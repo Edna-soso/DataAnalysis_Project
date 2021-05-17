@@ -6,7 +6,7 @@ class PreProcessing:
     def __init__(self):
         super.__init__()
         
-    def Del_Nul(self,data):
+    def Insert_Columns(self,data):
         data['Date']=[item[0] for item in data['InvoiceDate'].str.split()]
         data['Time']=[item[1] for item in data['InvoiceDate'].str.split()]
         data['Hour']=[item[0] for item in data['Time'].str.split(':')]
