@@ -1,4 +1,5 @@
 
+#xem các dòng dữ liệu đầu
 data.head()
 
 data.describe()
@@ -7,15 +8,16 @@ data.info()
 
 data.dtypes
 
-Đếm số khách hàng theo country
+#Đếm số khách hàng theo country
 
 country_data = data[['Country','CustomerID']].drop_duplicates()
+
 country_data.groupby(['Country']).agg({'CustomerID' : 'count'}).sort_values('CustomerID',ascending = False).reset_index().rename(columns = {'CustomerID':'CustomerID Count'})
 
-Đếm theo country
+#Đếm theo country
 
 data['Country'].value_counts()
 
-Kiểm tra null
+#Kiểm tra null
 
 data.isna().sum()
