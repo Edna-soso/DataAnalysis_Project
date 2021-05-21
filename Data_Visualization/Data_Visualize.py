@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import datetime as dt
 from matplotlib.gridspec import GridSpec
 import seaborn as sns
-import plotly.express as px
+import plotly.express as p
 
 import plotly.graph_objs as go
 class Data_Visual:
