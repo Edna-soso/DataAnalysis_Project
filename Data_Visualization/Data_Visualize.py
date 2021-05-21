@@ -19,3 +19,4 @@ class Data_Visual:
         plt.xticks(months)
         plt.xlabel("Months")
         plt.ylabel("TotalCost")
+    
