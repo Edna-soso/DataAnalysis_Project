@@ -1,23 +1,23 @@
-import numpy as np
 import pandas as pd
-import files
 
 class data_preprocessing:
-    def __init__(self):
-        super.__init__()
+    def __init__(self, data):
+        self.data= data
         
     def True_Data(self):
-        data.isna().sum()
-        self.data = data[pd.notnull(data['CustomerID'])]
-        self.data = data.query("Quantity > 0")  
+        self.data = self.data[pd.notnull(self.data['CustomerID'])]
+        self.data = self.data.query("Quantity > 0")
+        return self.data
         
     def Add_Colunm(self):
-         data['Date']=[item[0] for item in data['InvoiceDate'].str.split()]
-         data['Time']=[item[1] for item in data['InvoiceDate'].str.split()]
-         data['Hour']=[item[0] for item in data['Time'].str.split(':')]
-         data['Month']=[item[0] for item in data['Date'].str.split('/')]
-         data['TotalCost']=data['Quantity']*data['UnitPrice']
+        self.data['Date']=[item[0] for item in self.data['InvoiceDate'].str.split()]
+        self.data['Time']=[item[1] for item in self.data['InvoiceDate'].str.split()]
+        self.data['Hour']=[item[0] for item in self.data['Time'].str.split(':')]
+        self.data['Month']=[item[0] for item in self.data['Date'].str.split('/')]
+        self.data['Year']=[item[1] for item in self.data['Date'].str.split('/')]
+        self.data['TotalCost']=self.data['Quantity']*self.data['UnitPrice']
+        return self.data
     
-    def Dow_Data(self,data):
-        data.to_csv('filename.csv') 
-        files.download('filename.csv')
+    def Data(self):
+        return pd.DataFrame(self.data)
+        
