@@ -12,17 +12,10 @@ import plotly.express as px
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import pandas as pd
+from sklearn.preprocessing import StandardScaler
 
-data= pd.read_csv("/content/drive/MyDrive/IE221_DataAnalysis/DataAnalysis_Project-main/Dataset/OnlineRetail.csv",encoding = 'unicode_escape')
 
-data.head()
-
-data['TotalCost']=data['Quantity']*data['UnitPrice']
-
-class RFM:
-  def __init__(self, data):
-    self.data = data
-  def RScore(x,p,d):
+def RScore(x,p,d):
     if x <= d[p][0.25]:
         return 4
     elif x <= d[p][0.50]:
@@ -31,72 +24,42 @@ class RFM:
         return 2
     else:
         return 1
+# Arguments (x = value, p = recency, monetary_value, frequency, k = quartiles dict)
+def FMScore(x,p,d):
+    if x <= d[p][0.25]:
+        return 1
+    elif x <= d[p][0.50]:
+        return 2
+    elif x <= d[p][0.75]: 
+        return 3
+    else:
+        return 4
 
-  def FMScore(x,p,d):
-      if x <= d[p][0.25]:
-          return 1
-      elif x <= d[p][0.50]:
-          return 2
-      elif x <= d[p][0.75]: 
-          return 3
-      else:
-          return 4
-    
-  def ok(self):
-    self.data['InvoiceDate']=pd.to_datetime(self.data['InvoiceDate'])    
-    Latest_date=self.data['InvoiceDate'].max()
-    RFM_data = self.data.groupby('CustomerID').agg({'InvoiceDate' : lambda x :(Latest_date - x.max()).days,
-                                          'InvoiceNo' : 'count','TotalCost' : 'sum'}).reset_index()
-    RFM_data.rename(columns = {'InvoiceDate' : 'Recency',
-                          'InvoiceNo' : "Frequency",
-                          'TotalCost' : "Monetary"},inplace = True)
-    quantiles = RFM_score().quantile(q=[0.25,0.5,0.75])
-    rfm_segmentation = RFM_score()
-    rfm_segmentation['R_Quartile'] = rfm_segmentation['Recency'].apply(RScore, args=('Recency',quantiles,))
-    rfm_segmentation['F_Quartile'] = rfm_segmentation['Frequency'].apply(FMScore, args=('Frequency',quantiles,))
-    rfm_segmentation['M_Quartile'] = rfm_segmentation['Monetary'].apply(FMScore, args=('Monetary',quantiles,))
+def RFM(data):
 
-    rfm_segmentation['RFM_Score'] = rfm_segmentation.R_Quartile+ rfm_segmentation.F_Quartile + rfm_segmentation.M_Quartile
-    rfm_segmentation['RFM_Group'] = rfm_segmentation.R_Quartile.map(str)  + rfm_segmentation.F_Quartile.map(str)   + rfm_segmentation.M_Quartile.map(str) 
-    return rfm_segmentation
+  data['TotalCost']=data['Quantity']*data['UnitPrice']
 
-''' 
-  def last_day():
-
-    data['InvoiceDate']=pd.to_datetime(data['InvoiceDate'])
-    return data['InvoiceDate'].max()
-
-  def RFM_score():
-    Latest_date=last_day()
-    RFM_data = data.groupby('CustomerID').agg({'InvoiceDate' : lambda x :(Latest_date - x.max()).days,
-                                          'InvoiceNo' : 'count','TotalCost' : 'sum'}).reset_index()
-    RFM_data.rename(columns = {'InvoiceDate' : 'Recency',
-                          'InvoiceNo' : "Frequency",
-                          'TotalCost' : "Monetary"},inplace = True)
-    return RFM_data
-
-  def quantiles():
-    quantiles = RFM_score().quantile(q=[0.25,0.5,0.75])
-    print(quantiles, "\n")
-    quantiles.to_dict()
-    return quantiles
+  data['InvoiceDate']=pd.to_datetime(data['InvoiceDate'])
+  Latest_date=data['InvoiceDate'].max()
   
-    
-  def ok():
-    rfm_segmentation = RFM_score()
-    quantiles= quantiles()
-    rfm_segmentation['R_Quartile'] = rfm_segmentation['Recency'].apply(RScore, args=('Recency',quantiles,))
-    rfm_segmentation['F_Quartile'] = rfm_segmentation['Frequency'].apply(FMScore, args=('Frequency',quantiles,))
-    rfm_segmentation['M_Quartile'] = rfm_segmentation['Monetary'].apply(FMScore, args=('Monetary',quantiles,))
+  RFM_data = data.groupby('CustomerID').agg({'InvoiceDate' : lambda x :(Latest_date - x.max()).days,
+                                        'InvoiceNo' : 'count','TotalCost' : 'sum'}).reset_index()
+  RFM_data.rename(columns = {'InvoiceDate' : 'Recency',
+                        'InvoiceNo' : "Frequency",
+                        'TotalCost' : "Monetary"},inplace = True)
 
-    rfm_segmentation['RFM_Score'] = rfm_segmentation.R_Quartile+ rfm_segmentation.F_Quartile + rfm_segmentation.M_Quartile
-    rfm_segmentation['RFM_Group'] = rfm_segmentation.R_Quartile.map(str)  + rfm_segmentation.F_Quartile.map(str)   + rfm_segmentation.M_Quartile.map(str) 
- '''
+  quantiles = RFM_data.quantile(q=[0.25,0.5,0.75])
 
-rfm= RFM(data)
-rfm_data= rfm.ok()
+  rfm_segmentation = RFM_data
+  rfm_segmentation['R_Quartile'] = rfm_segmentation['Recency'].apply(RScore, args=('Recency',quantiles,))
+  rfm_segmentation['F_Quartile'] = rfm_segmentation['Frequency'].apply(FMScore, args=('Frequency',quantiles,))
+  rfm_segmentation['M_Quartile'] = rfm_segmentation['Monetary'].apply(FMScore, args=('Monetary',quantiles,))
 
-rfm_data.head()
+  rfm_segmentation['RFM_Score'] = rfm_segmentation.R_Quartile+ rfm_segmentation.F_Quartile + rfm_segmentation.M_Quartile
+  rfm_segmentation['RFM_Group'] = rfm_segmentation.R_Quartile.map(str)  + rfm_segmentation.F_Quartile.map(str)   + rfm_segmentation.M_Quartile.map(str) 
+  return rfm_segmentation
+
+rfm_segmentation=RFM(data)
 
 print("Best Customers: ",len(rfm_segmentation[rfm_segmentation['RFM_Group']=='444']))
 print('Loyal Customers: ',len(rfm_segmentation[rfm_segmentation['F_Quartile']==4]))
@@ -105,63 +68,52 @@ print('Almost Lost: ', len(rfm_segmentation[rfm_segmentation['RFM_Group']=='244'
 print('Lost Customers: ',len(rfm_segmentation[rfm_segmentation['RFM_Group']=='144']))
 print('Lost Cheap Customers: ',len(rfm_segmentation[rfm_segmentation['RFM_Group']=='111']))
 
-class K_Mean:
-  def __init__(self,rfm_segmentation):
-    self.rfm_segmentation= rfm_segmentation
-  def Pre_KMean(self):
-    scaler = StandardScaler()
-    scaler.fit(self.rfm_segmentation)
-    #Store it separately for clustering
-    rfm_normalized= scaler.transform(self.rfm_segmentation)
-  def choose(self):
-#First : Get the Best KMeans 
-    ks = range(1,19)
-    inertias=[]
-    for k in ks :
-        # Create a KMeans clusters
-        kc = KMeans(n_clusters=k,random_state=1)
-        kc.fit(self.rfm_segmentation)
-        inertias.append(kc.inertia_)
+def K_Mean(rfm_segmentation):
+  scaler = StandardScaler()
+  scaler.fit(rfm_segmentation)
+  #Store it separately for clustering
+  rfm_normalized= scaler.transform(rfm_segmentation)
 
-    # Plot ks vs inertias
-    f, ax = plt.subplots(figsize=(15, 8))
-    plt.plot(ks, inertias, '-o')
-    plt.xlabel('Number of clusters, k')
-    plt.ylabel('Inertia')
-    plt.xticks(ks)
-    plt.style.use('ggplot')
-    plt.title('What is the Best Number for KMeans ?')
-    plt.show()
+  #First : Get the Best KMeans 
+  ks = range(1,19)
+  inertias=[]
+  for k in ks :
+      # Create a KMeans clusters
+      kc = KMeans(n_clusters=k,random_state=1)
+      kc.fit(rfm_segmentation)
+      inertias.append(kc.inertia_)
 
-  def Fit_Kmean(self):
-    KM_clust = KMeans(n_clusters= 3, init = 'k-means++',max_iter = 1000)
-    KM_clust.fit(rfm_normalized)
+  # Plot ks vs inertias
+  f, ax = plt.subplots(figsize=(15, 8))
+  plt.plot(ks, inertias, '-o')
+  plt.xlabel('Number of clusters, k')
+  plt.ylabel('Inertia')
+  plt.xticks(ks)
+  plt.style.use('ggplot')
+  plt.title('What is the Best Number for KMeans ?')
+  plt.show()
 
-    self.rfm_segmentation['Cluster'] = KM_clust.labels_
-    self.rfm_segmentation['Cluster'] = 'Cluster' + self.rfm_segmentation['Cluster'].astype(str)
-    self.rfm_segmentation.head()
-    return self.rfm_segmentation
-  def Visua_Kmean(self):
-    fig = px.scatter(self.rfm_segmen_fit,x = 'Recency',y = 'Frequency', color = 'Cluster')
-    fig.show()
 
-    fig = px.scatter(self.rfm_segmen_fit,x = 'Monetary',y = 'Frequency', color = 'Cluster')
-    fig.show()
+  KM_clust = KMeans(n_clusters= 3, init = 'k-means++',max_iter = 1000)
+  KM_clust.fit(rfm_normalized)
 
-    fig = px.scatter(self.rfm_segmentation,x = 'Monetary',y = 'Recency', color = 'Cluster')
-    fig.show()
+  rfm_segmentation['Cluster'] = KM_clust.labels_
+  rfm_segmentation['Cluster'] = 'Cluster' + rfm_segmentation['Cluster'].astype(str)
+  rfm_segmentation.head()
 
-  def ok(self):
-    self.Pre_KMean()
-    self.choose()
-    self.Fit_Kmean()
-    self.Visua_Kmean(self.Fit_Kmean())
 
-km= K_Mean(rfm_df)
-km.ok()
+  fig = px.scatter(rfm_segmentation,x = 'Recency',y = 'Frequency', color = 'Cluster')
+  fig.show()
 
-mc=pw.Pywedge_Charts(rfm_segmentation,c=None,y="Cluster")
-charts =mc.make_charts()
+  fig = px.scatter(rfm_segmentation,x = 'Monetary',y = 'Frequency', color = 'Cluster')
+  fig.show()
 
-!pip install pywedge
+  fig = px.scatter(rfm_segmentation,x = 'Monetary',y = 'Recency', color = 'Cluster')
+  fig.show()
+
+def visua():
+  mc=pw.Pywedge_Charts(rfm_segmentation,c=None,y="Cluster")
+  charts =mc.make_charts()
+
+
 
